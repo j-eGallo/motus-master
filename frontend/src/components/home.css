@@ -1,0 +1,175 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #1f1f1f;
+}
+
+.home-container{
+  width: 100%;
+  min-height: 100vh;
+  background-color: #1f1f1f;
+  padding: 20px;
+  color: white;
+}
+
+.top-bar{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.home-logo{
+  width: 140px;
+}
+
+.burger{
+  width: 45px;
+  height: 45px;
+
+  border: 1px solid #666;
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 1.7rem;
+
+  cursor: pointer;
+}
+
+.score-container{
+  margin-top: 30px;
+  text-align: center;
+}
+
+.score-container p{
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.score-container span{
+  color: white;
+}
+
+.play-btn{
+  width: 230px;
+  height: 60px;
+
+  border: none;
+  border-radius: 40px;
+
+  background-color: #18B8FF;
+
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+
+  display: block;
+  margin: 40px auto;
+
+  cursor: pointer;
+}
+
+.ranking{
+  margin-top: 50px;
+}
+
+.ranking h2{
+  margin-bottom: 30px;
+}
+
+.player-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.player-left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.rank-number{
+  color: #18B8FF;
+}
+
+.score-pill{
+  background-color: #18B8FF;
+
+  padding: 12px 18px;
+
+  border-radius: 30px;
+
+  font-weight: bold;
+}
+
+.overlay-menu{
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0,0,0,0.75);
+
+  display: flex;
+  justify-content: flex-end;
+
+  z-index: 999;
+}
+
+.side-menu{
+  width: 220px;
+  height: 100vh;
+
+  background-color: #2b2b2b;
+
+  padding: 20px;
+
+  position: relative;
+}
+
+.close-btn{
+  position: absolute;
+  top: 15px;
+  right: 15px;
+
+  font-size: 2rem;
+
+  cursor: pointer;
+}
+
+.logout-btn{
+  margin-top: 80px;
+
+  background: none;
+  border: none;
+
+  color: white;
+  font-size: 1.3rem;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+
+
+.score-value{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cup-logo{
+  height: 3px;
+}

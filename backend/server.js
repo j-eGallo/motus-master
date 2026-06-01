@@ -2,13 +2,15 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mysql = require("mysql2");
+const cors = require("cors");
+
 require("dotenv").config();
-const path = require("path");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
 
 const connection = mysql.createConnection({
@@ -18,59 +20,124 @@ const connection = mysql.createConnection({
   database: process.env.DB_NAME,
 });
 
+
+
+
+
+/*
+========================================
+REGISTER
+========================================
+*/
+
 app.post("/register", async (req, res) => {
+
   const { pseudo, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const hashedPassword = await bcrypt.hash(
+    password,
+    10
+  );
 
   try {
+
     const sql = `
-    INSERT INTO joueur (pseudo, email, password)
-    VALUES (?, ?, ?)
-  `;
+      INSERT INTO joueur
+      (
+        pseudo,
+        email,
+        password
+      )
 
-    connection.query(sql, [pseudo, email, hashedPassword], (err, result) => {
-      if (err) {
-        console.log(err);
+      VALUES (?, ?, ?)
+    `;
 
-        return res.status(500).json({
-          message: "Erreur SQL",
+    connection.query(
+
+      sql,
+
+      [
+        pseudo,
+        email,
+        hashedPassword
+      ],
+
+      (err, result) => {
+
+        if(err){
+
+          console.log(err);
+
+          return res.status(500).json({
+            message: "Erreur SQL"
+          });
+
+        }
+
+        res.json({
+          message: "Vous êtes inscrit"
         });
+
       }
-      res.json({
-        message: pseudo + " crée",
-      });
-    });
-  } catch {
+
+    );
+
+  } catch(error){
+
+    console.log(error);
+
     return res.status(500).json({
-      message: "Erreur serveur",
+      message: "Erreur serveur"
     });
+
   }
+
 });
+
+
+
+
+
+/*
+========================================
+LOGIN
+========================================
+*/
 
 app.post("/login", (req, res) => {
 
-  const {email, password} = req.body;
+  const { email, password } = req.body;
 
   const sql = `
-    SELECT * FROM joueur 
+    SELECT *
+    FROM joueur
     WHERE email = ?
   `;
 
   connection.query(
-    sql, 
+
+    sql,
+
     [email],
 
     async (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          message: 'Connexion échouée'
-        });
-      }  
 
-      if(result.length === 0) {
+      if(err){
+
+        console.log(err);
+
+        return res.status(500).json({
+          message: "Connexion échouée"
+        });
+
+      }
+
+      if(result.length === 0){
+
         return res.status(404).json({
-          message: 'Utilisateur inexistant)'
-        })
+          message: "Utilisateur inexistant"
+        });
+
       }
 
       const joueur = result[0];
@@ -80,61 +147,85 @@ app.post("/login", (req, res) => {
         joueur.password
       );
 
-      if(!passwordMatch) {
+      if(!passwordMatch){
+
         return res.status(401).json({
-          message: 'Mot de passe incorrect'
+          message: "Mot de passe incorrect"
         });
+
       }
 
       const token = jwt.sign(
+
         {
-          id: joueur.id,
+          id: joueur.id_user,
           pseudo: joueur.pseudo
         },
 
         process.env.JWT_SECRET,
 
         {
-          expiresIn: '24h'
+          expiresIn: "24h"
         }
+
       );
 
       res.json({
-        message:'Connexion réussie',
+        message: "Connexion réussie",
         token
       });
+
     }
 
-  
   );
 
 });
 
 
-app.post('/logout', (req, res) => {
+
+
+
+/*
+========================================
+LOGOUT
+========================================
+*/
+
+app.post("/logout", (req, res) => {
 
   res.json({
-    message: 'Déconnexion réussie'
+    message: "Déconnexion réussie"
   });
 
 });
 
 
-app.post('/partie', async (req, res) => {
+
+
+
+/*
+========================================
+CREATION PARTIE
+========================================
+*/
+
+app.post("/partie", async (req, res) => {
 
   const { niveau_difficulte } = req.body;
 
-  const token = req.headers.authorization?.split(' ')[1];
+  const token =
+    req.headers.authorization?.split(" ")[1];
 
   if(!token){
+
     return res.status(401).json({
-      message: 'Token manquant'
+      message: "Token manquant"
     });
+
   }
 
   try {
 
-    // VERIFICATION TOKEN
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET
@@ -143,12 +234,13 @@ app.post('/partie', async (req, res) => {
     const id_joueur = decoded.id;
 
     const response = await fetch(
-      'https://random-word-api.herokuapp.com/word'
+      "https://random-word-api.herokuapp.com/word"
     );
 
     const data = await response.json();
 
-    const mot_secret = data[0].toUpperCase();
+    const mot_secret =
+      data[0].toUpperCase();
 
     const sql = `
       INSERT INTO partie
@@ -178,15 +270,17 @@ app.post('/partie', async (req, res) => {
       (err, result) => {
 
         if(err){
+
           console.log(err);
 
           return res.status(500).json({
-            message: 'Erreur SQL'
+            message: "Erreur SQL"
           });
+
         }
 
         res.json({
-          message: 'Partie créée',
+          message: "Partie créée",
           id_partie: result.insertId
         });
 
@@ -199,7 +293,7 @@ app.post('/partie', async (req, res) => {
     console.log(error);
 
     return res.status(500).json({
-      message: 'Erreur serveur'
+      message: "Erreur serveur"
     });
 
   }
@@ -209,8 +303,95 @@ app.post('/partie', async (req, res) => {
 
 
 
-app.post("/logout", (req, res) => {});
+
+/*
+========================================
+SCORE JOUEUR
+========================================
+*/
+
+app.get("/score", (req, res) => {
+
+  const token =
+    req.headers.authorization?.split(" ")[1];
+
+  if(!token){
+
+    return res.status(401).json({
+      message: "Token manquant"
+    });
+
+  }
+
+  try {
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    const id_joueur = decoded.id;
+
+    const sql = `
+      SELECT score_total
+      FROM joueur
+      WHERE id_user = ?
+    `;
+
+    connection.query(
+
+      sql,
+
+      [id_joueur],
+
+      (err, result) => {
+
+        if(err){
+
+          console.log(err);
+
+          return res.status(500).json({
+            message: "Erreur SQL"
+          });
+
+        }
+
+        if(result.length === 0){
+
+          return res.status(404).json({
+            message: "Joueur introuvable"
+          });
+
+        }
+
+        const score = result[0].score_total;
+
+        res.json({
+          score: score === null ? 0 : score
+        });
+
+      }
+
+    );
+
+  } catch(error){
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erreur serveur"
+    });
+
+  }
+
+});
+
+
+
+
 
 app.listen(PORT, () => {
-  console.log("Server running on http://localhost:" + PORT);
+  console.log(
+    "Server running on http://localhost:" + PORT
+  );
 });
