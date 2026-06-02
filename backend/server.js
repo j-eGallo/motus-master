@@ -387,7 +387,48 @@ app.get("/score", (req, res) => {
 });
 
 
+app.get("/classement", (req, res) => {
 
+  const sql = `
+  
+    SELECT
+      joueur.pseudo,
+      joueur.score_total
+
+    FROM joueur
+
+    WHERE score_total IS NOT NULL
+    AND score_total > 0
+
+    ORDER BY score_total DESC
+
+    LIMIT 10
+
+  `;
+
+  connection.query(
+
+    sql,
+
+    (err, result) => {
+
+      if(err){
+
+        console.log(err);
+
+        return res.status(500).json({
+          message: "Erreur SQL"
+        });
+
+      }
+
+      res.json(result);
+
+    }
+
+  );
+
+});
 
 
 app.listen(PORT, () => {

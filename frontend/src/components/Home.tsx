@@ -1,24 +1,66 @@
-import './Home.css';
+import './home.css';
 import Logo from '../assets/logo.png';
 import CupLogo from '../assets/cuplogo.png'
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+type JoueurClassement = {
+  pseudo: string;
+  score_total: number;
+};
+
 
 function Home() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [score, setScore] = useState(0);
+  const [classement, setClassement] = useState<JoueurClassement[]>([]);
+  const navigate = useNavigate();
 
+  
   const handleLogout = () => {
 
     localStorage.removeItem('token');
 
-    window.location.reload();
+    navigate('/');
 
   };
 
   useEffect(() => {
 
-  const fetchScore = async () => {
+    const token = localStorage.getItem('token');
+
+        if(!token){
+
+          navigate('/');
+
+          return;
+
+    }
+
+      const fetchScore = async () => {
+
+      const fetchClassement = async () => {
+
+    try {
+
+      const response = await fetch(
+        'http://localhost:3000/classement'
+      );
+
+      const data = await response.json();
+
+      setClassement(data);
+
+    } catch(error){
+
+      console.log(error);
+
+    }
+
+  };
+
+  fetchClassement();
 
     try {
 
@@ -130,48 +172,59 @@ function Home() {
         JOUER
       </button>
 
-      <div className="ranking">
+{
 
-        <h2>Classement des joueurs :</h2>
+  classement.length > 0 && (
 
-        {
+    <div className="ranking">
 
-          [1,2,3,4,5,6,7,8,9,10].map((joueur) => (
+      <h2>
+        Classement des joueurs :
+      </h2>
 
-            <div
-              className="player-row"
-              key={joueur}
-            >
+      {
 
-              <div className="player-left">
+        classement.map(
+          (joueur: JoueurClassement, index) => (
 
-                <span className="rank-number">
-                  {joueur}
-                </span>
+          <div
+            className="player-row"
+            key={index}
+          >
 
-                <span>
-                  {
-                    joueur === 2
-                    ?
-                    'Vous'
-                    :
-                    `Joueur ${joueur}`
-                  }
-                </span>
+            <div className="player-left">
 
-              </div>
+              <span className="rank-number">
+                {index + 1}
+              </span>
 
-              <div className="score-pill">
-                1249 points
-              </div>
+              <span>
+                {joueur.pseudo}
+              </span>
 
             </div>
 
-          ))
+            <div className="score-pill">
 
-        }
+              {
+                joueur.score_total
+              }
 
-      </div>
+              {' '}points
+
+            </div>
+
+          </div>
+
+        ))
+
+      }
+
+    </div>
+
+  )
+
+}
 
     </div>
 

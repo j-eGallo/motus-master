@@ -1,0 +1,74 @@
+.game-container{
+  min-height: 100vh;
+  background-color: #252525;
+  color: white;
+  padding: 20px;
+}
+
+.difficulty-select{
+  display: block;
+  width: 180px;
+  height: 32px;
+  margin: 25px auto 55px auto;
+  background-color: #252525;
+  color: white;
+  border: 1px solid #777;
+  border-radius: 20px;
+  padding-left: 15px;
+}
+
+.game-grid{
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 55px auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+}
+
+.game-cell{
+  border: 1px solid #666;
+}
+
+.word-input-hidden{
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.word-lines{
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.letter-line{
+  width: 36px;
+  height: 35px;
+  border-bottom: 2px solid white;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.validate-word-btn{
+  display: block;
+  margin: 0 auto;
+  width: 180px;
+  height: 42px;
+  border: none;
+  border-radius: 30px;
+  background-color: #18B8FF;
+  color: white;
+  font-weight: bold;
+}
+
+.quit-btn{
+  display: block;
+  margin: 18px auto 0 auto;
+  border: none;
+  background: none;
+  color: red;
+  font-weight: bold;
+}

@@ -1,4 +1,5 @@
 import './App.css'
+import Game from './components/Game';
 import Logo from './assets/logo.png';
 
 import {
@@ -314,6 +315,11 @@ function App() {
         <Route
           path="/home"
           element={<Home />}
+        />
+
+        <Route
+          path="/game"
+          element={<Game />}
         />
 
       </Routes>
