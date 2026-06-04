@@ -158,7 +158,7 @@ app.post("/login", (req, res) => {
       const token = jwt.sign(
 
         {
-          id: joueur.id_user,
+          id: joueur.id,
           pseudo: joueur.pseudo
         },
 
@@ -233,14 +233,13 @@ app.post("/partie", async (req, res) => {
 
     const id_joueur = decoded.id;
 
-    const response = await fetch(
-      "https://random-word-api.herokuapp.com/word"
-    );
+    const mot_secret = "MAISON";
 
-    const data = await response.json();
-
-    const mot_secret =
-      data[0].toUpperCase();
+    console.log({
+      id_joueur,
+      mot_secret,
+      niveau_difficulte
+    });
 
     const sql = `
       INSERT INTO partie
@@ -304,11 +303,6 @@ app.post("/partie", async (req, res) => {
 
 
 
-/*
-========================================
-SCORE JOUEUR
-========================================
-*/
 
 app.get("/score", (req, res) => {
 
@@ -335,7 +329,7 @@ app.get("/score", (req, res) => {
     const sql = `
       SELECT score_total
       FROM joueur
-      WHERE id_user = ?
+      WHERE id = ?
     `;
 
     connection.query(

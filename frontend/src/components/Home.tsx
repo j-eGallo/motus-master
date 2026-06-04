@@ -26,6 +26,7 @@ function Home() {
 
   };
 
+
   useEffect(() => {
 
     const token = localStorage.getItem('token');
@@ -168,7 +169,7 @@ function Home() {
 
       </div>
 
-      <button className="play-btn">
+      <button onClick={() => (navigate('/game'))} className="play-btn">
         JOUER
       </button>
 
