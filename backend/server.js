@@ -24,11 +24,6 @@ const connection = mysql.createConnection({
 
 
 
-/*
-========================================
-REGISTER
-========================================
-*/
 
 app.post("/register", async (req, res) => {
 
@@ -96,13 +91,6 @@ app.post("/register", async (req, res) => {
 
 
 
-
-
-/*
-========================================
-LOGIN
-========================================
-*/
 
 app.post("/login", (req, res) => {
 
@@ -185,11 +173,6 @@ app.post("/login", (req, res) => {
 
 
 
-/*
-========================================
-LOGOUT
-========================================
-*/
 
 app.post("/logout", (req, res) => {
 
@@ -203,20 +186,16 @@ app.post("/logout", (req, res) => {
 
 
 
-/*
-========================================
-CREATION PARTIE
-========================================
-*/
-
 app.post("/partie", async (req, res) => {
+
+  console.log("ROUTE /partie APPELEE");
 
   const { niveau_difficulte } = req.body;
 
   const token =
     req.headers.authorization?.split(" ")[1];
 
-  if(!token){
+  if (!token) {
 
     return res.status(401).json({
       message: "Token manquant"
@@ -233,13 +212,51 @@ app.post("/partie", async (req, res) => {
 
     const id_joueur = decoded.id;
 
-    const mot_secret = "MAISON";
+    let longueur;
 
-    console.log({
-      id_joueur,
-      mot_secret,
-      niveau_difficulte
-    });
+    if (niveau_difficulte === "Facile") {
+
+      longueur = 4;
+
+    }
+    else if (niveau_difficulte === "Moyen") {
+
+      longueur = 6;
+
+    }
+    else {
+
+      longueur = 10;
+
+    }
+
+    const pattern = "?".repeat(longueur);
+
+    const response = await fetch(
+      `https://api.datamuse.com/words?sp=${pattern}&max=100`
+    );
+
+    const data = await response.json();
+
+    console.log("REPONSE API :", data);
+
+    if (!data || data.length === 0) {
+
+      return res.status(500).json({
+        message: "Aucun mot trouvé"
+      });
+
+    }
+
+    const indexAleatoire =
+      Math.floor(
+        Math.random() * data.length
+      );
+
+    const mot_secret =
+      data[indexAleatoire].word.toUpperCase();
+
+    console.log("MOT SECRET :", mot_secret);
 
     const sql = `
       INSERT INTO partie
@@ -250,7 +267,6 @@ app.post("/partie", async (req, res) => {
         nb_tentatives,
         score
       )
-
       VALUES (?, ?, ?, ?, ?)
     `;
 
@@ -268,7 +284,7 @@ app.post("/partie", async (req, res) => {
 
       (err, result) => {
 
-        if(err){
+        if (err) {
 
           console.log(err);
 
@@ -280,14 +296,16 @@ app.post("/partie", async (req, res) => {
 
         res.json({
           message: "Partie créée",
-          id_partie: result.insertId
+          id_partie: result.insertId,
+          mot_secret
         });
 
       }
 
     );
 
-  } catch(error){
+  }
+  catch (error) {
 
     console.log(error);
 

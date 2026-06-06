@@ -64,12 +64,7 @@ function Game() {
 
         console.log(data);
 
-        localStorage.setItem(
-          'id_partie',
-          data.id_partie
-        );
-
-      } catch (error) {
+      } catch(error){
 
         console.log(error);
 
@@ -79,7 +74,7 @@ function Game() {
 
     createGame();
 
-  }, []);
+  }, [difficulty]);
 
   return (
 
