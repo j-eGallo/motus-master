@@ -269,7 +269,7 @@ function AuthPage() {
               <span
                 onClick={() => setIsLogin(true)}
               >
-                cliquez ici
+               {' '} cliquez ici
               </span>
 
             </>
@@ -283,7 +283,7 @@ function AuthPage() {
               <span
                 onClick={() => setIsLogin(false)}
               >
-                inscription
+                {' '}inscription
               </span>
 
             </>
