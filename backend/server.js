@@ -170,6 +170,27 @@ app.post("/login", (req, res) => {
 });
 
 
+const fetchJsonSafe = async (url) => {
+
+  const response = await fetch(url);
+
+  const text = await response.text();
+
+  try {
+
+    return JSON.parse(text);
+
+  } catch (error) {
+
+    console.log("Réponse non JSON reçue depuis :", url);
+    console.log(text.slice(0, 300));
+
+    return null;
+
+  }
+
+};
+
 
 app.post("/partie", async (req, res) => {
 
@@ -204,7 +225,20 @@ app.post("/partie", async (req, res) => {
       `https://trouve-mot.fr/api/size/${longueur}`
     );
 
-    const data = await response.json();
+    const text = await response.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      console.log("Réponse non JSON :", text);
+
+      return res.status(500).json({
+        message: "L'API externe ne répond pas correctement"
+      });
+    }
+
 
     if (!data || data.length === 0 || !data[0].name) {
       return res.status(500).json({
@@ -405,28 +439,28 @@ app.post("/sendWord", async (req, res) => {
     });
   }
 
-  const motJoueur = mot.toUpperCase();
+  const motJoueur = mot
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
 
   try {
 
-    const pattern = "?".repeat(motJoueur.length);
-
-    const wikiResponse = await fetch(
+    const wikiData = await fetchJsonSafe(
       `https://fr.wiktionary.org/w/api.php?action=query&titles=${motJoueur.toLowerCase()}&format=json&origin=*`
     );
 
-    const wikiData = await wikiResponse.json();
+    if (wikiData && wikiData.query && wikiData.query.pages) {
 
-    const pages = wikiData.query.pages;
+      const pages = wikiData.query.pages;
+      const pageId = Object.keys(pages)[0];
 
-    const pageId = Object.keys(pages)[0];
+      if (pageId === "-1") {
+        return res.status(400).json({
+          message: "Ce mot n'existe pas"
+        });
+      }
 
-    const motExiste = pageId !== "-1";
-
-    if (!motExiste) {
-      return res.status(400).json({
-        message: "Ce mot n'existe pas"
-      });
     }
 
     const sql = `
@@ -458,7 +492,12 @@ app.post("/sendWord", async (req, res) => {
       const partie = result[0];
 
       const id_joueur = partie.id_joueur;
-      const motSecret = partie.mot_secret.toUpperCase();
+
+      const motSecret = partie.mot_secret
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase();
+
       const nbTentatives = partie.nb_tentatives + 1;
 
       const resultat = motJoueur
@@ -562,28 +601,66 @@ app.post("/sendWord", async (req, res) => {
             });
           }
 
-          if (!victoire) {
+          if (!victoire && !defaite) {
 
             return res.json({
-              message: defaite ? "Partie perdue" : "Mot accepté",
+              message: "Mot accepté",
               mot: motJoueur,
               resultat,
               nb_tentatives: nbTentatives,
               victoire,
               defaite,
-              score: 0,
-              mot_secret: defaite ? motSecret : undefined
+              score: 0
             });
+
+          }
+
+          if (defaite) {
+
+            const updateDefaiteSql = `
+              UPDATE joueur
+              SET defaites = COALESCE(defaites, 0) + 1
+              WHERE id = ?
+            `;
+
+            return connection.query(
+              updateDefaiteSql,
+              [id_joueur],
+              (defaiteErr) => {
+
+                if (defaiteErr) {
+                  console.log(defaiteErr);
+
+                  return res.status(500).json({
+                    message: "Erreur SQL update défaite"
+                  });
+                }
+
+                return res.json({
+                  message: "Partie perdue",
+                  mot: motJoueur,
+                  resultat,
+                  nb_tentatives: nbTentatives,
+                  victoire,
+                  defaite,
+                  score: 0,
+                  mot_secret: motSecret
+                });
+
+              }
+            );
 
           }
 
           const updateJoueurSql = `
             UPDATE joueur
-            SET score_total = COALESCE(score_total, 0) + ?
+            SET
+              score_total = COALESCE(score_total, 0) + ?,
+              victoires = COALESCE(victoires, 0) + 1
             WHERE id = ?
           `;
 
-          connection.query(
+          return connection.query(
             updateJoueurSql,
             [
               scorePartie,
@@ -628,6 +705,8 @@ app.post("/sendWord", async (req, res) => {
   }
 
 });
+
+
 
 app.post("/logout", (req, res) => {
 
