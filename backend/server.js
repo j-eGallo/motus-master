@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const mysql = require("mysql2");
 const cors = require("cors");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
+
 require("dotenv").config();
 
 const app = express();
@@ -22,9 +25,74 @@ const connection = mysql.createConnection({
 
 
 
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Motus Master API",
+      version: "1.0.0",
+      description: "Documentation de l'API Motus Master"
+    },
+    servers: [
+      {
+        url: `http://localhost:${PORT}`
+      }
+    ]
+  },
+  apis: ["./server.js"]
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+app.use(
+  "/swagger",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Inscrire un nouveau joueur
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pseudo
+ *               - email
+ *               - password
+ *             properties:
+ *               pseudo:
+ *                 type: string
+ *                 example: JeanEmmanuel
+ *               email:
+ *                 type: string
+ *                 example: jean@email.com
+ *               password:
+ *                 type: string
+ *                 example: motdepasse123
+ *     responses:
+ *       200:
+ *         description: Joueur inscrit avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Vous êtes inscrit
+ *       500:
+ *         description: Erreur SQL ou erreur serveur
+ */
 app.post("/register", async (req, res) => {
 
   const { pseudo, email, password } = req.body;
@@ -92,6 +160,50 @@ app.post("/register", async (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Connecter un joueur
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jean@email.com
+ *               password:
+ *                 type: string
+ *                 example: motdepasse123
+ *     responses:
+ *       200:
+ *         description: Connexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Connexion réussie
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       401:
+ *         description: Mot de passe incorrect
+ *       404:
+ *         description: Utilisateur inexistant
+ *       500:
+ *         description: Connexion échouée
+ */
 app.post("/login", (req, res) => {
 
   const { email, password } = req.body;
@@ -192,6 +304,51 @@ const fetchJsonSafe = async (url) => {
 };
 
 
+
+
+
+/**
+ * @swagger
+ * /partie:
+ *   post:
+ *     summary: Créer une nouvelle partie
+ *     tags:
+ *       - Partie
+ *     security:
+ *       - bearerAuth: []
+ *     description: Crée une nouvelle partie pour le joueur connecté. Le mot secret est généré via l'API tierce Trouve-Mot selon le niveau de difficulté choisi.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - niveau_difficulte
+ *             properties:
+ *               niveau_difficulte:
+ *                 type: string
+ *                 enum: [Facile, Moyen, Difficile]
+ *                 example: Moyen
+ *     responses:
+ *       200:
+ *         description: Partie créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Partie créée
+ *                 id_partie:
+ *                   type: integer
+ *                   example: 12
+ *       401:
+ *         description: Token manquant ou invalide
+ *       500:
+ *         description: Erreur serveur, erreur SQL ou erreur liée à l'API externe
+ */
 app.post("/partie", async (req, res) => {
 
   const { niveau_difficulte } = req.body;
@@ -306,7 +463,33 @@ app.post("/partie", async (req, res) => {
 
 
 
-
+/**
+ * @swagger
+ * /score:
+ *   get:
+ *     summary: Récupérer le score du joueur connecté
+ *     tags:
+ *       - Statistiques
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Score du joueur récupéré avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 score:
+ *                   type: integer
+ *                   example: 150
+ *       401:
+ *         description: Token manquant ou invalide
+ *       404:
+ *         description: Joueur introuvable
+ *       500:
+ *         description: Erreur SQL ou erreur serveur
+ */
 app.get("/score", (req, res) => {
 
   const token =
@@ -384,6 +567,33 @@ app.get("/score", (req, res) => {
 });
 
 
+
+/**
+ * @swagger
+ * /classement:
+ *   get:
+ *     summary: Récupérer le classement des joueurs
+ *     tags:
+ *       - Statistiques
+ *     responses:
+ *       200:
+ *         description: Classement des 10 meilleurs joueurs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   pseudo:
+ *                     type: string
+ *                     example: JeanEmmanuel
+ *                   score_total:
+ *                     type: integer
+ *                     example: 250
+ *       500:
+ *         description: Erreur SQL
+ */
 app.get("/classement", (req, res) => {
 
   const sql = `
@@ -429,6 +639,79 @@ app.get("/classement", (req, res) => {
 
 
 
+
+/**
+ * @swagger
+ * /sendWord:
+ *   post:
+ *     summary: Envoyer une proposition de mot
+ *     tags:
+ *       - Partie
+ *     description: Vérifie le mot proposé par le joueur, compare les lettres avec le mot secret, met à jour les tentatives, le résultat de la partie, le score, les victoires ou les défaites.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id_partie
+ *               - mot
+ *             properties:
+ *               id_partie:
+ *                 type: integer
+ *                 example: 12
+ *               mot:
+ *                 type: string
+ *                 example: MAISON
+ *     responses:
+ *       200:
+ *         description: Mot accepté, victoire ou défaite
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Mot accepté
+ *                 mot:
+ *                   type: string
+ *                   example: MAISON
+ *                 resultat:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       lettre:
+ *                         type: string
+ *                         example: M
+ *                       statut:
+ *                         type: string
+ *                         enum: [correct, present, absent]
+ *                         example: correct
+ *                 nb_tentatives:
+ *                   type: integer
+ *                   example: 3
+ *                 victoire:
+ *                   type: boolean
+ *                   example: false
+ *                 defaite:
+ *                   type: boolean
+ *                   example: false
+ *                 score:
+ *                   type: integer
+ *                   example: 0
+ *                 mot_secret:
+ *                   type: string
+ *                   example: MAISON
+ *       400:
+ *         description: Données manquantes ou mot inexistant
+ *       404:
+ *         description: Partie introuvable
+ *       500:
+ *         description: Erreur SQL ou erreur serveur
+ */
 app.post("/sendWord", async (req, res) => {
 
   const { id_partie, mot } = req.body;
@@ -707,7 +990,25 @@ app.post("/sendWord", async (req, res) => {
 });
 
 
-
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     summary: Déconnecter un joueur
+ *     tags:
+ *       - Authentification
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Déconnexion réussie
+ */
 app.post("/logout", (req, res) => {
 
   res.json({
