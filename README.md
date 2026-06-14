@@ -89,10 +89,15 @@ Le projet peut être lancé de deux manières :
 -Back-end :
 ```bash
 node server.js
+```
+
 
 -Front-end :
 ```bash
 npm run dev
+```
+
+
 - avec Docker, afin de lancer automatiquement l'ensemble des services.
 
 ---
