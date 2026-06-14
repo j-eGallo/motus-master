@@ -1,0 +1,42 @@
+services:
+
+  database:
+    image: mysql:8.0
+    container_name: motus_database
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: motus_master
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    container_name: motus_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: database
+      DB_USER: root
+      DB_PASS: root
+      DB_NAME: motus_master
+      JWT_SECRET: motus_master_secret
+    depends_on:
+      - database
+
+  frontend:
+    build: ./frontend
+    container_name: motus_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
