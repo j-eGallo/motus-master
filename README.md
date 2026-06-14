@@ -85,6 +85,14 @@ MOTUS-MASTER/
 Le projet peut être lancé de deux manières :
 
 - manuellement, en lançant séparément le back-end, le front-end et MySQL  (node server.js pour le back-end et npm run dev pour le front-end);
+
+-Back-end :
+```bash
+node server.js
+
+-Front-end :
+```bash
+npm run dev
 - avec Docker, afin de lancer automatiquement l'ensemble des services.
 
 ---
