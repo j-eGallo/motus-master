@@ -80,3 +80,20 @@ MOTUS-MASTER/
 ├── docker-compose.yml
 └── README.md
 ```
+## Configuration et lancement du projet
+
+Le projet peut être lancé de deux manières :
+
+- manuellement, en lançant séparément le back-end, le front-end et MySQL  (node server.js pour le back-end et npm run dev pour le front-end);
+- avec Docker, afin de lancer automatiquement l'ensemble des services.
+
+---
+
+## Lancement avec Docker
+
+Le projet est dockerisé afin de simplifier son installation et son exécution.
+
+Depuis la racine du projet, lancer la commande suivante :
+
+```bash
+docker compose up --build
